@@ -41,7 +41,7 @@ void loop()
   duration = pulseIn(echoPin, HIGH);
   distance = (duration/2) / 29.1;
   
-  motion_detector()                  // activating motion detection
+  motion_detector();                  // activating motion detection
   
   if (motion_detected=true){
   Serial.println("Motion Detected");
@@ -79,7 +79,7 @@ void motion_detector()
   int base_sum;                                              // Sum of the base array
   int current_sum;                                          // Sum of the current array
   int diff;                                                        // Difference between base and current
-  
+  int distance;
   
   if (distance > 1000) 
   {
