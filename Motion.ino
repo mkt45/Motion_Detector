@@ -1,5 +1,5 @@
 /*******************************************************
-arduino_motion detection v.0.1
+arduino_motion detection v.0.2
 
 
 1st Oct 2014
@@ -36,22 +36,18 @@ void loop()
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
-  
-  motion_detector()                  // activating motion detection
-
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
   duration = pulseIn(echoPin, HIGH);
   distance = (duration/2) / 29.1;
-  if (distance < 4) {  // This is where the LED On/Off happens
-    digitalWrite(led,HIGH); // When the Red condition is met, the Green LED should turn off
-  digitalWrite(led2,LOW);
-}
-  else {
-    digitalWrite(led,LOW);
-    digitalWrite(led2,HIGH);
+  
+  motion_detector()                  // activating motion detection
+  
+  if (motion_detected=true){
+  Serial.println("Motion Detected");
   }
-  if (distance >= 200 || distance <= 0){
+   
+  if (distance >= 1000 || distance <= 5){
     Serial.println("Out of range");
   }
   else {
@@ -82,18 +78,16 @@ void motion_detector()
   static int current_ind = 0;                              // Index into the current array
   int base_sum;                                              // Sum of the base array
   int current_sum;                                          // Sum of the current array
-  int range;                                                    // Local value of the distance
   int diff;                                                        // Difference between base and current
   
-  range = range_cm;                                     // Copy the distance value
   
-  if (range > 1000) 
+  if (distance > 1000) 
   {
-  range = 1000;                                                         // Limit the range value
+  distance = 1000;                                                         // Limit the distance value
   }
   
   
-  motion_base_array[base_ind++] = range;                // Insert value into the base array
+  motion_base_array[base_ind++] = distance;                // Insert value into the base array
   
   if (base_ind >= MOTION_BASE_SIZE)                     // Wrap the base index to the start
   {
@@ -108,7 +102,7 @@ void motion_detector()
   
   motion_base = base_sum / MOTION_BASE_SIZE;   // Divide by the array size
 
-  motion_current_array[current_ind++] = range;         // Insert value into the current array
+  motion_current_array[current_ind++] = distance;         // Insert value into the current array
   
   if (current_ind >= MOTION_CURRENT_SIZE)              // Wrap the current index to the start
   {
@@ -126,6 +120,6 @@ void motion_detector()
   diff = motion_base - motion_current;               // Compute the difference
   if (diff > 40)                                                  // Check for movement towards the sensor
   {
-    motion_detected = true;                               // Action Trigger
+    motion_detected = true;                               // Trigger de Disparo
   }
 }
