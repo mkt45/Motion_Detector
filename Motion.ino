@@ -120,6 +120,6 @@ void motion_detector()
   diff = motion_base - motion_current;               // Compute the difference
   if (diff > 40)                                                  // Check for movement towards the sensor
   {
-    motion_detected = true;                               // Trigger de Disparo
+    motion_detected = true;                               // Action Trigger
   }
 }
