@@ -1,59 +1,63 @@
 /*******************************************************
-arduino_motion detection v.0.2
+arduino_motion detection v.0.3
+code based on Arduino Distance Sensor Project 
+and
+http://homediyelectronics.com/projects/arduino/arduinomotiondetector/software
 
-
-1st Oct 2014
+10th Oct 2014
 ********************************************************/
  
 // define some values used by the panel and buttons
-#define trigPin 12                                       // Pin 12 trigger output
-#define echoPin 2                                      // Pin 2 Echo input
-#define motionLEDPin 13                          // Pin 13 motion detector indicator output
+#define trigPin 12                                                                        // Pin 12 trigger output
+#define echoPin 11                                                                      // Pin 2 Echo input
+#define motionLedPin 13                                                             // Pin 13 motion detector indicator output
 
-volatile int range_cm;                                   // The distance detected in centimeters
-
-#define MOTION_BASE_SIZE      24                                            // Length of the motion base samples array
-#define MOTION_CURRENT_SIZE   6                                          // Length of the motion current value array
+#define MOTION_BASE_SIZE 24                                                 // Length of the motion base samples array
+#define MOTION_CURRENT_SIZE 6                                            // Length of the motion current value array
 volatile int motion_base_array[MOTION_BASE_SIZE];                   // Motion base array
 volatile int motion_current_array[MOTION_CURRENT_SIZE];         // Motion current value array
-volatile int motion_base;                                                              // Long term motion base value
-volatile int motion_current;                                                           // Current motion distance value
-volatile bool motion_detected = false;                                           // True when motion output triggering        
+volatile int motion_base;                                                               // Long term motion base value
+volatile int motion_current;                                                            // Current motion distance value
+volatile bool motion_detected = false;                         // True when motion output triggering        
+int t;
+
+long duration, distance;
 
 
 void setup()
 {  
   pinMode(trigPin, OUTPUT);                           // Trigger pin set to output
   pinMode(echoPin, INPUT);                            // Echo pin set to input
-  pinMode(motionLEDPin, OUTPUT);               // Motion detector indicator pin set to output
+  pinMode(motionLedPin, OUTPUT);               // Motion detector indicator pin set to output
  
   Serial.begin (9600);                                // Initialise the serial monitor output 
 }
 
 void loop()
 {
-  long duration, distance;
+  delayMicroseconds(2);
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
   duration = pulseIn(echoPin, HIGH);
-  distance = (duration/2) / 29.1;
+  distance = (duration/2) / 29.1;  // acknowledge current distance
   
   motion_detector();                  // activating motion detection
-  
-  if (motion_detected=true){
-  Serial.println("Motion Detected");
-  }
-   
-  if (distance >= 1000 || distance <= 5){
-    Serial.println("Out of range");
-  }
-  else {
-    Serial.print(distance);
-    Serial.println(" cm");
-  }
+
+  if(motion_detected)
+  {
+    delay(1000);
+    digitalWrite(motionLedPin, HIGH);
+    delay(50);
+    digitalWrite(motionLedPin, LOW);
+    delay(50);
+    } 
+    else 
+    {
+    motion_detected = false;     
+  }  
   delay(500);
 }
 
@@ -78,14 +82,16 @@ void motion_detector()
   static int current_ind = 0;                              // Index into the current array
   int base_sum;                                              // Sum of the base array
   int current_sum;                                          // Sum of the current array
-  int diff;                                                        // Difference between base and current
-  int distance;
+  int diff;                                                 // Difference between base and current
   
-  if (distance > 1000) 
-  {
-  distance = 1000;                                                         // Limit the distance value
+  if (distance > 1000){
+  distance = 1000;                                          // Limit the distance value
   }
   
+  /*if (distance < 0) {                                     // Not necessary. It was getting negative nr but changed distance int for long  
+   distance = 0; 
+  }
+  */
   
   motion_base_array[base_ind++] = distance;                // Insert value into the base array
   
@@ -95,12 +101,16 @@ void motion_detector()
   }
   
   base_sum = 0;                                                       // Start the base value processing 
-  for (i = 0; i < MOTION_BASE_SIZE; i++)
-  {
-    base_sum += motion_base_array[i];                      // Sum the contents of the array
-  }
   
-  motion_base = base_sum / MOTION_BASE_SIZE;   // Divide by the array size
+  if (distance != 0){
+    for (i = 0; i < MOTION_BASE_SIZE; i++)
+    {
+      base_sum += motion_base_array[i];                      // Sum the contents of the array
+    }
+  }
+  motion_base = base_sum / MOTION_BASE_SIZE;              // Divide by the array size
+
+  Serial.println(motion_base);
 
   motion_current_array[current_ind++] = distance;         // Insert value into the current array
   
@@ -110,16 +120,27 @@ void motion_detector()
   }
 
   current_sum = 0;                                    // Start the current value processing
-  for (i = 0; i < MOTION_CURRENT_SIZE; i++)
-  {
+
+  if (distance != 0){
+    for (i = 0; i < MOTION_CURRENT_SIZE; i++)
+    {
     current_sum += motion_current_array[i];           // Sum the contents of the array
+    }
   }
   
   motion_current = current_sum / MOTION_CURRENT_SIZE;// Divide by the array size
   
+  Serial.println(motion_current);
+  
+  
   diff = motion_base - motion_current;               // Compute the difference
-  if (diff > 40)                                                  // Check for movement towards the sensor
+  if ((diff > 40) || (diff<-40))                                                  // Check for movement towards the sensor
   {
     motion_detected = true;                               // Action Trigger
   }
+  else
+  {
+  motion_detected = false;
+  }
 }
+
