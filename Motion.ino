@@ -4,6 +4,8 @@ code based on Arduino Distance Sensor Project
 and
 http://homediyelectronics.com/projects/arduino/arduinomotiondetector/software
 
+After motion sensing it triggers a Led as warning.
+
 10th Oct 2014
 ********************************************************/
  
@@ -140,7 +142,7 @@ void motion_detector()
   }
   else
   {
-  motion_detected = false;
+  motion_detected = false;                               // Deactivate Trigger
   }
 }
 
